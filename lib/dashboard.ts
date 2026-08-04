@@ -48,7 +48,16 @@ export async function getDashboardData(): Promise<DashboardData> {
   const monthLabel = formatMonthLabel(month)
 
   if (!isSupabaseConfigured || !supabase) {
-    return { variants: [], today, month, monthLabel, salesTableReady: false, supabaseReady: false }
+    return {
+      variants: [],
+      today,
+      month,
+      monthLabel,
+      salesTableReady: false,
+      supabaseReady: false,
+      onlineDailySales: [],
+      offlineDailySales: [],
+    }
   }
 
   const [variantsResult, inboundResult, salesResult] = await Promise.all([
