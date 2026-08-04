@@ -14,9 +14,48 @@ export default async function Home() {
   }
 
   const stockRows = data.variants.map((v) => [v.name, v.totalEntry])
-  const onlineRows = data.variants.map((v) => [v.name, v.onlineToday, v.onlineMonth])
-  const offlineRows = data.variants.map((v) => [v.name, v.offlineToday, v.offlineMonth])
   const remainingRows = data.variants.map((v) => [v.name, v.stockRemaining])
+
+  // Build daily sales tables with date, per-variant qty, and monthly total
+  const buildDailySalesRows = (dailySales: typeof data.onlineDailySales) => {
+    const dateMap = new Map<string, Map<string, number>>()
+    for (const row of dailySales) {
+      if (!dateMap.has(row.date)) dateMap.set(row.date, new Map())
+      dateMap.get(row.date)!.set(row.variant, row.quantity)
+    }
+
+    const monthlyTotals = new Map<string, number>()
+    for (const variantName of data.variants.map((v) => v.name)) {
+      let total = 0
+      for (const variantMap of dateMap.values()) {
+        total += variantMap.get(variantName) ?? 0
+      }
+      monthlyTotals.set(variantName, total)
+    }
+
+    const rows: (string | number)[][] = []
+    for (const [date, variantMap] of Array.from(dateMap.entries()).sort().reverse()) {
+      for (const variant of data.variants) {
+        const qty = variantMap.get(variant.name) ?? 0
+        if (qty > 0) {
+          rows.push([date, variant.name, qty])
+        }
+      }
+    }
+
+    // Add monthly totals as separate rows (one per variant)
+    for (const variant of data.variants) {
+      const qty = monthlyTotals.get(variant.name) ?? 0
+      if (qty > 0) {
+        rows.push(['[TOTAL]', variant.name, qty])
+      }
+    }
+
+    return rows
+  }
+
+  const onlineDailySalesRows = buildDailySalesRows(data.onlineDailySales)
+  const offlineDailySalesRows = buildDailySalesRows(data.offlineDailySales)
 
   return (
     <main className="p-6 md:p-10 max-w-5xl mx-auto font-sans space-y-8">
@@ -74,16 +113,16 @@ export default async function Home() {
 
       <ReportTable
         title="Penjualan Online"
-        subtitle={`Hari ini (${data.today}) & akumulasi ${data.monthLabel}`}
-        headers={['Varian', 'Hari Ini', 'Bulan Ini']}
-        rows={onlineRows}
+        subtitle={`Laporan harian — ${data.monthLabel}`}
+        headers={['Tanggal', 'Varian', 'Jumlah']}
+        rows={onlineDailySalesRows.map((row) => row)}
       />
 
       <ReportTable
         title="Penjualan Offline"
-        subtitle={`Hari ini (${data.today}) & akumulasi ${data.monthLabel}`}
-        headers={['Varian', 'Hari Ini', 'Bulan Ini']}
-        rows={offlineRows}
+        subtitle={`Laporan harian — ${data.monthLabel}`}
+        headers={['Tanggal', 'Varian', 'Jumlah']}
+        rows={offlineDailySalesRows.map((row) => row)}
       />
 
       <ReportTable

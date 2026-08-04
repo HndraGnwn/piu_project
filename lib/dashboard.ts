@@ -13,6 +13,12 @@ export type VariantReport = {
   stockRemaining: number
 }
 
+export type DailySalesRow = {
+  date: string
+  variant: string
+  quantity: number
+}
+
 export type DashboardData = {
   variants: VariantReport[]
   today: string
@@ -20,6 +26,8 @@ export type DashboardData = {
   monthLabel: string
   salesTableReady: boolean
   supabaseReady: boolean
+  onlineDailySales: DailySalesRow[]
+  offlineDailySales: DailySalesRow[]
 }
 
 type InboundRow = { variant_id: string; quantity: number }
@@ -97,5 +105,50 @@ export async function getDashboardData(): Promise<DashboardData> {
     }
   })
 
-  return { variants, today, month, monthLabel, salesTableReady, supabaseReady: true }
+  // Group sales by date and variant for display in daily tables
+  const onlineDailySales = new Map<string, Map<string, number>>() // date -> variant_id -> qty
+  const offlineDailySales = new Map<string, Map<string, number>>()
+
+  for (const sale of salesRows) {
+    const date = toJakartaDate(sale.created_at)
+    const isThisMonth = toJakartaMonth(date) === month
+
+    if (!isThisMonth) continue
+
+    const dailyMap = sale.channel === 'online' ? onlineDailySales : offlineDailySales
+    if (!dailyMap.has(date)) dailyMap.set(date, new Map())
+    const variantMap = dailyMap.get(date)!
+    variantMap.set(sale.variant_id, (variantMap.get(sale.variant_id) ?? 0) + sale.quantity)
+  }
+
+  // Flatten maps into sorted arrays for rendering
+  const flattenDailySales = (dailyMap: Map<string, Map<string, number>>): DailySalesRow[] => {
+    const rows: DailySalesRow[] = []
+    for (const [date, variantMap] of Array.from(dailyMap.entries()).sort().reverse()) {
+      for (const variant of sortVariants(
+        (variantsResult.data ?? []).filter((v) => variantMap.has(v.id)) as VariantRow[]
+      )) {
+        const qty = variantMap.get(variant.id) ?? 0
+        if (qty > 0) {
+          rows.push({
+            date,
+            variant: displayVariantName(variant.name),
+            quantity: qty,
+          })
+        }
+      }
+    }
+    return rows
+  }
+
+  return {
+    variants,
+    today,
+    month,
+    monthLabel,
+    salesTableReady,
+    supabaseReady: true,
+    onlineDailySales: flattenDailySales(onlineDailySales),
+    offlineDailySales: flattenDailySales(offlineDailySales),
+  }
 }

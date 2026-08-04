@@ -70,24 +70,24 @@ export function SalesForm({ channel, title }: SalesFormProps) {
   }
 
   return (
-    <main className="p-10 max-w-lg mx-auto font-sans">
-      <Link href="/" className="text-blue-600 hover:underline mb-4 inline-block">
+    <main className="p-10 max-w-lg mx-auto font-sans bg-gray-950 dark:bg-gray-950 min-h-screen">
+      <Link href="/" className="text-blue-400 hover:text-blue-300 hover:underline mb-4 inline-block">
         &larr; Kembali ke Dashboard
       </Link>
 
-      <h1 className="text-2xl font-bold mb-6">{title}</h1>
+      <h1 className="text-2xl font-bold mb-6 text-white">{title}</h1>
 
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-sm border space-y-4">
+      <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border dark:border-gray-700 space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Pilih Varian</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pilih Varian</label>
           <select
             value={selectedVariant}
             onChange={(e) => setSelectedVariant(e.target.value)}
-            className="w-full border p-2 rounded-lg"
+            className="w-full border dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
             required
           >
             {variants.map((variant) => (
-              <option key={variant.id} value={variant.id}>
+              <option key={variant.id} value={variant.id} className="bg-white text-gray-900">
                 {displayVariantName(variant.name)}
               </option>
             ))}
@@ -95,12 +95,12 @@ export function SalesForm({ channel, title }: SalesFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Jumlah Terjual (Pcs)</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Jumlah Terjual (Pcs)</label>
           <input
             type="number"
             value={quantity}
             onChange={(e) => setQuantity(e.target.value)}
-            className="w-full border p-2 rounded-lg"
+            className="w-full border dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
             placeholder="Contoh: 10"
             required
             min="1"
