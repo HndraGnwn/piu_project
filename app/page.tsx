@@ -27,7 +27,16 @@ export default async function Home() {
         </p>
       </header>
 
-      {!data.salesTableReady && (
+      {!data.supabaseReady && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-900 p-4 rounded-xl text-sm">
+          Supabase belum terhubung di environment ini. Tambahkan{' '}
+          <code className="bg-amber-100 px-1 rounded">NEXT_PUBLIC_SUPABASE_URL</code> dan{' '}
+          <code className="bg-amber-100 px-1 rounded">NEXT_PUBLIC_SUPABASE_ANON_KEY</code> lewat menu
+          Settings → Vars, lalu muat ulang halaman ini. Tabel laporan akan kosong sampai kredensial diisi.
+        </div>
+      )}
+
+      {data.supabaseReady && !data.salesTableReady && (
         <div className="bg-amber-50 border border-amber-200 text-amber-900 p-4 rounded-xl text-sm">
           Tabel <code className="bg-amber-100 px-1 rounded">sales_logs</code> belum dibuat. Buka Supabase →
           SQL Editor, lalu jalankan file <code className="bg-amber-100 px-1 rounded">supabase/schema.sql</code>{' '}

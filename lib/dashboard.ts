@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { isSupabaseConfigured, supabase } from '@/lib/supabase'
 import { displayVariantName, sortVariants } from '@/lib/variants'
 import { currentMonthInJakarta, formatMonthLabel, todayInJakarta, toJakartaDate, toJakartaMonth } from '@/lib/dates'
 
@@ -19,6 +19,7 @@ export type DashboardData = {
   month: string
   monthLabel: string
   salesTableReady: boolean
+  supabaseReady: boolean
 }
 
 type InboundRow = { variant_id: string; quantity: number }
@@ -37,6 +38,10 @@ export async function getDashboardData(): Promise<DashboardData> {
   const today = todayInJakarta()
   const month = currentMonthInJakarta()
   const monthLabel = formatMonthLabel(month)
+
+  if (!isSupabaseConfigured || !supabase) {
+    return { variants: [], today, month, monthLabel, salesTableReady: false, supabaseReady: false }
+  }
 
   const [variantsResult, inboundResult, salesResult] = await Promise.all([
     supabase.from('variants').select('id, name, stock_quantity'),
@@ -83,5 +88,5 @@ export async function getDashboardData(): Promise<DashboardData> {
     stockRemaining: variant.stock_quantity,
   }))
 
-  return { variants, today, month, monthLabel, salesTableReady }
+  return { variants, today, month, monthLabel, salesTableReady, supabaseReady: true }
 }

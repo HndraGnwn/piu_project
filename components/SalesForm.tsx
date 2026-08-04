@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
+import { SUPABASE_SETUP_MESSAGE, supabase } from '@/lib/supabase'
 import { displayVariantName, sortVariants } from '@/lib/variants'
 
 type Variant = { id: string; name: string }
@@ -22,6 +22,10 @@ export function SalesForm({ channel, title }: SalesFormProps) {
 
   useEffect(() => {
     async function fetchVariants() {
+      if (!supabase) {
+        setMessage(SUPABASE_SETUP_MESSAGE)
+        return
+      }
       const { data } = await supabase.from('variants').select('id, name')
       if (data) {
         const sorted = sortVariants(data)
@@ -34,6 +38,12 @@ export function SalesForm({ channel, title }: SalesFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!supabase) {
+      setMessage(SUPABASE_SETUP_MESSAGE)
+      return
+    }
+
     setLoading(true)
     setMessage('')
 

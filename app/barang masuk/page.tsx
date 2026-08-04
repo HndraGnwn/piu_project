@@ -1,7 +1,7 @@
 'use client' // Menandakan ini adalah komponen interaktif (Client Component)
 
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { SUPABASE_SETUP_MESSAGE, supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import { displayVariantName, sortVariants } from '@/lib/variants'
 
@@ -21,6 +21,10 @@ export default function BarangMasuk() {
   // Mengambil daftar varian kue saat halaman dimuat untuk dropdown
   useEffect(() => {
     async function fetchVariants() {
+      if (!supabase) {
+        setMessage(SUPABASE_SETUP_MESSAGE)
+        return
+      }
       const { data } = await supabase.from('variants').select('id, name')
       if (data) {
         const sorted = sortVariants(data)
@@ -34,6 +38,12 @@ export default function BarangMasuk() {
   // Fungsi yang dijalankan saat tombol "Simpan" ditekan
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!supabase) {
+      setMessage(SUPABASE_SETUP_MESSAGE)
+      return
+    }
+
     setLoading(true)
     setMessage('')
 
@@ -112,7 +122,7 @@ export default function BarangMasuk() {
 
         {/* Notifikasi Sukses/Error */}
         {message && (
-          <div className={`p-3 rounded-lg text-sm ${message.includes('Gagal') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+          <div className={`p-3 rounded-lg text-sm ${message.includes('Gagal') || message.includes('belum') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
             {message}
           </div>
         )}
