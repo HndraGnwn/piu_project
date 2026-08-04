@@ -1,7 +1,11 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+// Supabase now issues "publishable" keys (sb_publishable_...) in place of the
+// older "anon" JWT keys. Accept either so existing setups keep working.
+const supabaseKey =
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 /**
  * True only when both public Supabase env vars are present.
@@ -18,7 +22,7 @@ export const supabase: SupabaseClient | null = isSupabaseConfigured
   : null
 
 export const SUPABASE_SETUP_MESSAGE =
-  'Supabase belum terhubung. Tambahkan NEXT_PUBLIC_SUPABASE_URL dan NEXT_PUBLIC_SUPABASE_ANON_KEY pada Environment Variables project ini.'
+  'Supabase belum terhubung. Tambahkan NEXT_PUBLIC_SUPABASE_URL dan NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY pada Environment Variables project ini.'
 
 /** Use inside handlers where a configured client is required. */
 export function requireSupabase(): SupabaseClient {
