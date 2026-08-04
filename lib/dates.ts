@@ -24,6 +24,23 @@ export function toJakartaMonth(iso: string): string {
   return toJakartaDate(iso).slice(0, 7)
 }
 
+/**
+ * Turns a date input value (YYYY-MM-DD) into a timestamp anchored to midday in
+ * Jakarta (UTC+7, no DST). Midday keeps the calendar date stable no matter how
+ * the value is later rendered.
+ */
+export function jakartaDateToTimestamp(date: string): string {
+  return `${date}T12:00:00+07:00`
+}
+
+export function formatDateLabel(date: string): string {
+  return new Intl.DateTimeFormat('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(jakartaDateToTimestamp(date)))
+}
+
 export function formatMonthLabel(monthKey: string): string {
   const [year, month] = monthKey.split('-')
   const date = new Date(Number(year), Number(month) - 1, 1)

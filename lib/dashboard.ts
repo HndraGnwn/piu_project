@@ -24,7 +24,7 @@ export type DashboardData = {
 
 type InboundRow = { variant_id: string; quantity: number }
 type SalesRow = { variant_id: string; quantity: number; channel: string; created_at: string }
-type VariantRow = { id: string; name: string; stock_quantity: number }
+type VariantRow = { id: string; name: string }
 
 function sumByVariant(rows: { variant_id: string; quantity: number }[]): Map<string, number> {
   const totals = new Map<string, number>()
@@ -44,7 +44,7 @@ export async function getDashboardData(): Promise<DashboardData> {
   }
 
   const [variantsResult, inboundResult, salesResult] = await Promise.all([
-    supabase.from('variants').select('id, name, stock_quantity'),
+    supabase.from('variants').select('id, name'),
     supabase.from('inbound_logs').select('variant_id, quantity'),
     supabase.from('sales_logs').select('variant_id, quantity, channel, created_at'),
   ])
@@ -77,16 +77,25 @@ export async function getDashboardData(): Promise<DashboardData> {
     }
   }
 
-  const variants = sortVariants((variantsResult.data ?? []) as VariantRow[]).map((variant) => ({
-    id: variant.id,
-    name: displayVariantName(variant.name),
-    totalEntry: totalEntry.get(variant.id) ?? 0,
-    onlineToday: onlineToday.get(variant.id) ?? 0,
-    onlineMonth: onlineMonth.get(variant.id) ?? 0,
-    offlineToday: offlineToday.get(variant.id) ?? 0,
-    offlineMonth: offlineMonth.get(variant.id) ?? 0,
-    stockRemaining: variant.stock_quantity,
-  }))
+  // Total sold across all time, used to derive the remaining stock.
+  const totalSold = sumByVariant(salesRows)
+
+  const variants = sortVariants((variantsResult.data ?? []) as VariantRow[]).map((variant) => {
+    const entry = totalEntry.get(variant.id) ?? 0
+
+    return {
+      id: variant.id,
+      name: displayVariantName(variant.name),
+      totalEntry: entry,
+      onlineToday: onlineToday.get(variant.id) ?? 0,
+      onlineMonth: onlineMonth.get(variant.id) ?? 0,
+      offlineToday: offlineToday.get(variant.id) ?? 0,
+      offlineMonth: offlineMonth.get(variant.id) ?? 0,
+      // Derived from the logs rather than variants.stock_quantity, because
+      // duplicate database triggers double-count every inbound row.
+      stockRemaining: entry - (totalSold.get(variant.id) ?? 0),
+    }
+  })
 
   return { variants, today, month, monthLabel, salesTableReady, supabaseReady: true }
 }

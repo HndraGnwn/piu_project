@@ -31,7 +31,7 @@ export default async function Home() {
         <div className="bg-amber-50 border border-amber-200 text-amber-900 p-4 rounded-xl text-sm">
           Supabase belum terhubung di environment ini. Tambahkan{' '}
           <code className="bg-amber-100 px-1 rounded">NEXT_PUBLIC_SUPABASE_URL</code> dan{' '}
-          <code className="bg-amber-100 px-1 rounded">NEXT_PUBLIC_SUPABASE_ANON_KEY</code> lewat menu
+          <code className="bg-amber-100 px-1 rounded">NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY</code> lewat menu
           Settings → Vars, lalu muat ulang halaman ini. Tabel laporan akan kosong sampai kredensial diisi.
         </div>
       )}
@@ -46,7 +46,7 @@ export default async function Home() {
 
       <nav className="flex flex-wrap gap-3">
         <Link
-          href="/barang masuk"
+          href="/barang-masuk"
           className="bg-amber-700 text-white px-4 py-2 rounded-lg font-semibold hover:bg-amber-800 text-sm"
         >
           + Barang Masuk
@@ -87,8 +87,8 @@ export default async function Home() {
       />
 
       <ReportTable
-        title="Sisa Stok Bulan Ini"
-        subtitle={`Stok tersisa per varian — ${data.monthLabel}`}
+        title="Sisa Stok"
+        subtitle="Total barang masuk dikurangi total penjualan (online + offline)"
         headers={['Varian', 'Sisa Stok (Pcs)']}
         rows={remainingRows}
       />
