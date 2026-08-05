@@ -1,5 +1,5 @@
-import { SalesForm } from '@/components/SalesForm'
+import { MultiSalesForm } from '@/components/MultiSalesForm'
 
 export default function PenjualanOfflinePage() {
-  return <SalesForm channel="offline" title="Input Penjualan Offline" />
+  return <MultiSalesForm channel="offline" title="Input Penjualan Offline" />
 }

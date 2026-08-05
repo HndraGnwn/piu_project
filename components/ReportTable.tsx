@@ -7,17 +7,17 @@ type ReportTableProps = {
 
 export function ReportTable({ title, subtitle, headers, rows }: ReportTableProps) {
   return (
-    <section className="bg-white border rounded-xl shadow-sm overflow-hidden">
-      <div className="px-5 py-4 border-b bg-amber-50">
-        <h2 className="text-lg font-semibold text-amber-900">{title}</h2>
-        {subtitle && <p className="text-sm text-amber-800/70 mt-0.5">{subtitle}</p>}
+    <section className="bg-slate-950 border border-slate-700 rounded-3xl shadow-xl overflow-hidden">
+      <div className="px-6 py-5 border-b border-slate-700 bg-slate-900/90">
+        <h2 className="text-lg font-semibold text-slate-100">{title}</h2>
+        {subtitle && <p className="text-sm text-slate-400 mt-1">{subtitle}</p>}
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b bg-gray-50 text-left">
+            <tr className="border-b border-slate-700 bg-slate-950 text-left text-slate-300">
               {headers.map((header) => (
-                <th key={header} className="px-5 py-3 font-medium text-gray-600">
+                <th key={header} className="px-6 py-3 font-semibold">
                   {header}
                 </th>
               ))}
@@ -25,11 +25,11 @@ export function ReportTable({ title, subtitle, headers, rows }: ReportTableProps
           </thead>
           <tbody>
             {rows.map((row, index) => (
-              <tr key={index} className="border-b last:border-b-0">
+              <tr key={index} className="border-b border-slate-800 last:border-b-0 hover:bg-slate-900/80">
                 {row.map((cell, cellIndex) => (
                   <td
                     key={cellIndex}
-                    className={`px-5 py-3 ${cellIndex === 0 ? 'font-medium text-gray-800' : 'text-gray-700 tabular-nums'}`}
+                    className={`px-6 py-3 ${cellIndex === 0 ? 'font-semibold text-slate-100' : 'text-slate-300 tabular-nums'}`}
                   >
                     {cell}
                   </td>

@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { DeliveryTruck01Icon, ShoppingCart01Icon, Store01Icon } from '@hugeicons/core-free-icons'
 import { SUPABASE_SETUP_MESSAGE, supabase } from '@/lib/supabase'
 import { displayVariantName, sortVariants } from '@/lib/variants'
 import { formatDateLabel, jakartaDateToTimestamp, todayInJakarta } from '@/lib/dates'
@@ -136,47 +138,68 @@ export default function BarangMasukPage() {
   }
 
   return (
-    <main className="p-6 md:p-10 max-w-3xl mx-auto font-sans">
-      <Link href="/" className="text-blue-600 hover:underline mb-4 inline-block text-sm">
+    <main className="p-6 md:p-10 max-w-4xl mx-auto font-sans">
+      <Link href="/" className="text-slate-400 hover:text-white mb-4 inline-block text-sm">
         &larr; Kembali ke Dashboard
       </Link>
 
-      <header className="mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold">Input Barang Masuk</h1>
-        <p className="text-gray-500 text-sm mt-1 text-pretty">
-          Isi jumlah stok yang masuk untuk setiap varian, lalu pilih tanggal kedatangan barang.
-          Varian yang dikosongkan tidak akan disimpan.
-        </p>
-      </header>
-
-      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-        <div className="bg-white text-gray-900 p-5 rounded-xl shadow-sm border">
-          <label htmlFor="entry-date" className="block text-sm font-medium mb-1">
-            Tanggal Barang Masuk
-          </label>
-          <input
-            id="entry-date"
-            type="date"
-            value={entryDate}
-            max={todayInJakarta()}
-            onChange={(e) => setEntryDate(e.target.value)}
-            className="w-full sm:w-64 border p-2 rounded-lg"
-            required
-          />
-          <p className="text-xs text-gray-500 mt-2">
-            Tanggal ini dipakai untuk semua varian yang diisi di bawah.
-          </p>
+      <div className="rounded-[28px] border border-slate-700 bg-slate-950/95 shadow-[0_30px_80px_rgba(15,23,42,0.75)] overflow-hidden">
+        <div className="px-8 py-6 border-b border-slate-700">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h1 className="text-3xl font-semibold text-white">Input Barang Masuk</h1>
+              <p className="mt-2 text-sm text-slate-400 max-w-2xl">
+                Isi jumlah stok yang masuk untuk setiap varian, lalu pilih tanggal kedatangan barang.
+                Varian yang dikosongkan tidak akan disimpan.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/penjualan/online"
+                className="inline-flex items-center gap-2 rounded-2xl bg-sky-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(14,165,233,0.35)] transition hover:bg-sky-400"
+              >
+                <HugeiconsIcon icon={ShoppingCart01Icon} size={18} color="currentColor" strokeWidth={1.5} />
+                Online Sales
+              </Link>
+              <Link
+                href="/penjualan/offline"
+                className="inline-flex items-center gap-2 rounded-2xl bg-lime-500 px-4 py-2 text-sm font-semibold text-slate-950 shadow-[0_12px_30px_rgba(132,204,22,0.35)] transition hover:bg-lime-400"
+              >
+                <HugeiconsIcon icon={Store01Icon} size={18} color="currentColor" strokeWidth={1.5} />
+                Offline Sales
+              </Link>
+            </div>
+          </div>
         </div>
 
-        <div className="bg-white text-gray-900 rounded-xl shadow-sm border overflow-hidden">
-          <div className="px-5 py-4 border-b">
-            <h2 className="font-semibold">Jumlah &amp; Harga Modal per Varian</h2>
+        <form onSubmit={handleSubmit} className="px-8 py-6 flex flex-col gap-6">
+          <div className="bg-slate-900 border border-slate-700 p-5 rounded-3xl">
+            <label htmlFor="entry-date" className="block text-sm font-medium text-slate-200 mb-1">
+              Tanggal Barang Masuk
+            </label>
+            <input
+              id="entry-date"
+              type="date"
+              value={entryDate}
+              max={todayInJakarta()}
+              onChange={(e) => setEntryDate(e.target.value)}
+              className="w-full sm:w-64 border border-slate-700 bg-slate-950 text-slate-100 p-2 rounded-lg"
+              required
+            />
+            <p className="text-xs text-slate-500 mt-2">
+              Tanggal ini dipakai untuk semua varian yang diisi di bawah.
+            </p>
           </div>
 
+          <div className="bg-slate-900 rounded-3xl border border-slate-700 overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-700">
+              <h2 className="font-semibold text-white">Jumlah &amp; Harga Modal per Varian</h2>
+            </div>
+
           {variants.length === 0 ? (
-            <p className="px-5 py-6 text-sm text-gray-500">Memuat varian…</p>
+            <p className="px-6 py-6 text-sm text-slate-500">Memuat varian…</p>
           ) : (
-            <ul className="divide-y">
+            <ul className="divide-y divide-slate-800">
               {variants.map((variant) => {
                 const row = draft[variant.id] ?? { quantity: '', capitalPrice: '' }
                 const qty = Number.parseInt(row.quantity, 10)
@@ -185,18 +208,18 @@ export default function BarangMasukPage() {
                 return (
                   <li
                     key={variant.id}
-                    className={`px-5 py-4 flex flex-col sm:flex-row sm:items-end gap-3 ${
-                      active ? 'bg-amber-50' : ''
+                    className={`px-6 py-4 flex flex-col gap-4 sm:flex-row sm:items-end ${
+                      active ? 'bg-emerald-500/10' : ''
                     }`}
                   >
-                    <span className="sm:w-40 font-medium text-sm">
+                    <span className="sm:w-44 font-medium text-slate-100">
                       {displayVariantName(variant.name)}
                     </span>
 
                     <div className="flex-1">
                       <label
                         htmlFor={`qty-${variant.id}`}
-                        className="block text-xs text-gray-500 mb-1"
+                        className="block text-xs text-slate-400 mb-1"
                       >
                         Jumlah (Pcs)
                       </label>
@@ -208,14 +231,14 @@ export default function BarangMasukPage() {
                         value={row.quantity}
                         onChange={(e) => updateDraft(variant.id, 'quantity', e.target.value)}
                         placeholder="0"
-                        className="w-full border p-2 rounded-lg"
+                        className="w-full border border-slate-700 bg-slate-950 text-slate-100 p-2 rounded-2xl"
                       />
                     </div>
 
                     <div className="flex-1">
                       <label
                         htmlFor={`price-${variant.id}`}
-                        className="block text-xs text-gray-500 mb-1"
+                        className="block text-xs text-slate-400 mb-1"
                       >
                         Harga Modal Satuan (Rp)
                       </label>
@@ -228,7 +251,7 @@ export default function BarangMasukPage() {
                         onChange={(e) => updateDraft(variant.id, 'capitalPrice', e.target.value)}
                         placeholder="Contoh: 15000"
                         required={active}
-                        className="w-full border p-2 rounded-lg"
+                        className="w-full border border-slate-700 bg-slate-950 text-slate-100 p-2 rounded-2xl"
                       />
                     </div>
                   </li>
@@ -238,29 +261,29 @@ export default function BarangMasukPage() {
           )}
         </div>
 
-        <div className="bg-white text-gray-900 p-5 rounded-xl shadow-sm border flex flex-col gap-4">
-          <dl className="flex flex-wrap gap-x-8 gap-y-2 text-sm">
-            <div className="flex gap-2">
-              <dt className="text-gray-500">Varian terisi:</dt>
-              <dd className="font-semibold">{filledRows.length}</dd>
+        <div className="bg-slate-900 border border-slate-700 p-5 rounded-3xl flex flex-col gap-4">
+          <dl className="grid gap-4 sm:grid-cols-3 text-sm text-slate-300">
+            <div className="rounded-3xl border border-slate-800 bg-slate-950 p-4">
+              <dt className="text-xs uppercase tracking-[0.25em] text-slate-500">Varian terisi</dt>
+              <dd className="mt-2 text-lg font-semibold text-white">{filledRows.length}</dd>
             </div>
-            <div className="flex gap-2">
-              <dt className="text-gray-500">Total masuk:</dt>
-              <dd className="font-semibold">{totalPcs} pcs</dd>
+            <div className="rounded-3xl border border-slate-800 bg-slate-950 p-4">
+              <dt className="text-xs uppercase tracking-[0.25em] text-slate-500">Total masuk</dt>
+              <dd className="mt-2 text-lg font-semibold text-white">{totalPcs} pcs</dd>
             </div>
-            <div className="flex gap-2">
-              <dt className="text-gray-500">Total modal:</dt>
-              <dd className="font-semibold">{rupiah.format(totalCost)}</dd>
+            <div className="rounded-3xl border border-slate-800 bg-slate-950 p-4">
+              <dt className="text-xs uppercase tracking-[0.25em] text-slate-500">Total modal</dt>
+              <dd className="mt-2 text-lg font-semibold text-white">{rupiah.format(totalCost)}</dd>
             </div>
           </dl>
 
           {feedback && (
             <p
               role="status"
-              className={`p-3 rounded-lg text-sm ${
+              className={`p-3 rounded-2xl text-sm ${
                 feedback.tone === 'error'
-                  ? 'bg-red-100 text-red-700'
-                  : 'bg-green-100 text-green-700'
+                  ? 'bg-red-900/80 text-red-200 border border-red-700'
+                  : 'bg-emerald-900/80 text-emerald-200 border border-emerald-700'
               }`}
             >
               {feedback.text}
@@ -270,7 +293,7 @@ export default function BarangMasukPage() {
           <button
             type="submit"
             disabled={loading || filledRows.length === 0}
-            className="w-full bg-amber-700 text-white p-3 rounded-lg font-semibold hover:bg-amber-800 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="w-full bg-linear-to-r from-amber-500 to-orange-500 text-slate-950 p-3 rounded-3xl font-semibold shadow-lg transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {loading ? 'Menyimpan…' : 'Simpan Barang Masuk'}
           </button>

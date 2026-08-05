@@ -1,6 +1,10 @@
+import Image from 'next/image'
 import Link from 'next/link'
-import { ReportTable } from '@/components/ReportTable'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { DeliveryTruck01Icon, ShoppingCart01Icon, Store01Icon } from '@hugeicons/core-free-icons'
+import { ExportPdfButton } from '@/components/ExportPdfButton'
 import { getDashboardData } from '@/lib/dashboard'
+import { displayVariantName } from '@/lib/variants'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,124 +17,228 @@ export default async function Home() {
     return <div className="p-10">Error mengambil data: {message}</div>
   }
 
-  const stockRows = data.variants.map((v) => [v.name, v.totalEntry])
-  const remainingRows = data.variants.map((v) => [v.name, v.stockRemaining])
+  const variantNames = data.variants.map((variant) => variant.name)
 
-  // Build daily sales tables with date, per-variant qty, and monthly total
-  const buildDailySalesRows = (dailySales: typeof data.onlineDailySales) => {
-    const dateMap = new Map<string, Map<string, number>>()
-    for (const row of dailySales) {
-      if (!dateMap.has(row.date)) dateMap.set(row.date, new Map())
-      dateMap.get(row.date)!.set(row.variant, row.quantity)
-    }
-
-    const monthlyTotals = new Map<string, number>()
-    for (const variantName of data.variants.map((v) => v.name)) {
-      let total = 0
-      for (const variantMap of dateMap.values()) {
-        total += variantMap.get(variantName) ?? 0
-      }
-      monthlyTotals.set(variantName, total)
-    }
-
-    const rows: (string | number)[][] = []
-    for (const [date, variantMap] of Array.from(dateMap.entries()).sort().reverse()) {
-      for (const variant of data.variants) {
-        const qty = variantMap.get(variant.name) ?? 0
-        if (qty > 0) {
-          rows.push([date, variant.name, qty])
-        }
-      }
-    }
-
-    // Add monthly totals as separate rows (one per variant)
-    for (const variant of data.variants) {
-      const qty = monthlyTotals.get(variant.name) ?? 0
-      if (qty > 0) {
-        rows.push(['[TOTAL]', variant.name, qty])
-      }
-    }
-
-    return rows
+  const inventoryByDate = new Map<string, Map<string, number>>()
+  for (const row of data.inboundDailyEntries) {
+    if (!inventoryByDate.has(row.date)) inventoryByDate.set(row.date, new Map())
+    const map = inventoryByDate.get(row.date)!
+    map.set(row.variant, (map.get(row.variant) ?? 0) + row.quantity)
   }
 
-  const onlineDailySalesRows = buildDailySalesRows(data.onlineDailySales)
-  const offlineDailySalesRows = buildDailySalesRows(data.offlineDailySales)
+  const inventoryRows = Array.from(inventoryByDate.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, counts]) => ({
+      date,
+      values: variantNames.map((variant) => counts.get(variant) ?? 0),
+      subtotal: variantNames.reduce((sum, variant) => sum + (counts.get(variant) ?? 0), 0),
+    }))
+
+  const inventoryTotals = variantNames.map((variant) =>
+    data.inboundDailyEntries.filter((row) => row.variant === variant).reduce((sum, row) => sum + row.quantity, 0)
+  )
+  const inventoryTotalAll = inventoryTotals.reduce((sum, value) => sum + value, 0)
+
+  const offlineByDate = new Map<string, Map<string, number>>()
+  const onlineByDate = new Map<string, Map<string, number>>()
+  for (const row of data.offlineDailySales) {
+    if (!offlineByDate.has(row.date)) offlineByDate.set(row.date, new Map())
+    offlineByDate.get(row.date)!.set(row.variant, (offlineByDate.get(row.date)!.get(row.variant) ?? 0) + row.quantity)
+  }
+  for (const row of data.onlineDailySales) {
+    if (!onlineByDate.has(row.date)) onlineByDate.set(row.date, new Map())
+    onlineByDate.get(row.date)!.set(row.variant, (onlineByDate.get(row.date)!.get(row.variant) ?? 0) + row.quantity)
+  }
+
+  const salesDates = Array.from(new Set([...offlineByDate.keys(), ...onlineByDate.keys()])).sort((a, b) => a.localeCompare(b))
+
+  const salesRows = salesDates.map((date) => {
+    const offlineMap = offlineByDate.get(date) ?? new Map()
+    const onlineMap = onlineByDate.get(date) ?? new Map()
+    const values = variantNames.flatMap((variant) => [offlineMap.get(variant) ?? 0, onlineMap.get(variant) ?? 0])
+    return {
+      date,
+      values,
+      subtotal: values.reduce((sum, value) => sum + value, 0),
+    }
+  })
+
+  const salesTotals = variantNames.flatMap((variant) => {
+    const offlineSum = data.offlineDailySales.filter((row) => row.variant === variant).reduce((sum, row) => sum + row.quantity, 0)
+    const onlineSum = data.onlineDailySales.filter((row) => row.variant === variant).reduce((sum, row) => sum + row.quantity, 0)
+    return [offlineSum, onlineSum]
+  })
+  const salesTotalAll = salesTotals.reduce((sum, value) => sum + value, 0)
+
+  const remainingValues = data.variants.map((variant) => variant.stockRemaining)
+  const remainingTotal = remainingValues.reduce((sum, value) => sum + value, 0)
 
   return (
-    <main className="p-6 md:p-10 max-w-5xl mx-auto font-sans space-y-8">
-      <header>
-        <h1 className="text-3xl font-bold mb-2">Dubai Chewy Cookie POS</h1>
-        <p className="text-gray-500">
-          Laporan stok & penjualan — {data.today} · {data.monthLabel}
-        </p>
-      </header>
+    <main className="min-h-screen bg-slate-950 text-slate-100">
+      <div className="mx-auto max-w-6xl px-6 py-8">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="relative flex h-14 w-14 items-center justify-center rounded-3xl bg-white/10">
+              <Image
+                src="/piu-logo.svg"
+                alt="PIU logo"
+                width={40}
+                height={40}
+                className="h-10 w-10 object-contain"
+              />
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-[0.4em] text-slate-500">PIU</p>
+              <h1 className="text-3xl font-semibold tracking-tight text-white">Dubai Chewy Cookie POS</h1>
+            </div>
+          </div>
 
-      {!data.supabaseReady && (
-        <div className="bg-amber-50 border border-amber-200 text-amber-900 p-4 rounded-xl text-sm">
-          Supabase belum terhubung di environment ini. Tambahkan{' '}
-          <code className="bg-amber-100 px-1 rounded">NEXT_PUBLIC_SUPABASE_URL</code> dan{' '}
-          <code className="bg-amber-100 px-1 rounded">NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY</code> lewat menu
-          Settings → Vars, lalu muat ulang halaman ini. Tabel laporan akan kosong sampai kredensial diisi.
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href="/barang-masuk"
+              className="inline-flex items-center gap-2 rounded-2xl bg-orange-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(249,115,22,0.35)] transition hover:bg-orange-400"
+            >
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl bg-white/15">
+                <HugeiconsIcon icon={DeliveryTruck01Icon} size={18} color="currentColor" strokeWidth={1.5} />
+              </span>
+              Barang Masuk
+            </Link>
+            <Link
+              href="/penjualan/online"
+              className="inline-flex items-center gap-2 rounded-2xl bg-sky-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(14,165,233,0.35)] transition hover:bg-sky-400"
+            >
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl bg-white/15">
+                <HugeiconsIcon icon={ShoppingCart01Icon} size={18} color="currentColor" strokeWidth={1.5} />
+              </span>
+              Online Sales
+            </Link>
+            <Link
+              href="/penjualan/offline"
+              className="inline-flex items-center gap-2 rounded-2xl bg-lime-500 px-5 py-3 text-sm font-semibold text-slate-950 shadow-[0_12px_30px_rgba(132,204,22,0.35)] transition hover:bg-lime-400"
+            >
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl bg-white/15">
+                <HugeiconsIcon icon={Store01Icon} size={18} color="currentColor" strokeWidth={1.5} />
+              </span>
+              Offline Sales
+            </Link>
+          </div>
         </div>
-      )}
 
-      {data.supabaseReady && !data.salesTableReady && (
-        <div className="bg-amber-50 border border-amber-200 text-amber-900 p-4 rounded-xl text-sm">
-          Tabel <code className="bg-amber-100 px-1 rounded">sales_logs</code> belum dibuat. Buka Supabase →
-          SQL Editor, lalu jalankan file <code className="bg-amber-100 px-1 rounded">supabase/schema.sql</code>{' '}
-          agar penjualan online/offline bisa dicatat.
+        <div className="mt-10 space-y-10">
+          <section>
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-white">Inventory</h2>
+              <ExportPdfButton />
+            </div>
+            <div className="overflow-x-auto rounded-3xl border border-slate-800 bg-slate-950/90">
+              <table className="min-w-full border-separate border-spacing-0 text-sm">
+                <thead>
+                  <tr className="text-left text-slate-400">
+                    <th className="border-b border-slate-800 px-4 py-3">Tgl</th>
+                    {variantNames.map((variant) => (
+                      <th key={variant} className="border-b border-slate-800 px-4 py-3">{displayVariantName(variant)}</th>
+                    ))}
+                    <th className="border-b border-slate-800 px-4 py-3">Sub-Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {inventoryRows.map((row) => (
+                    <tr key={row.date} className="border-b border-slate-800 hover:bg-slate-900/60">
+                      <td className="px-4 py-3 text-slate-200">{row.date}</td>
+                      {row.values.map((value, index) => (
+                        <td key={`${row.date}-${index}`} className="px-4 py-3 text-slate-200 text-center tabular-nums">
+                          {value.toString().padStart(2, '0')}
+                        </td>
+                      ))}
+                      <td className="px-4 py-3 text-slate-100 font-semibold text-center tabular-nums">{row.subtotal.toString().padStart(2, '0')}</td>
+                    </tr>
+                  ))}
+                  <tr className="bg-slate-900/70 text-slate-200">
+                    <td className="px-4 py-3 font-semibold">Jumlah Total</td>
+                    {inventoryTotals.map((value, index) => (
+                      <td key={`total-${index}`} className="px-4 py-3 text-center tabular-nums">{value.toString().padStart(2, '0')}</td>
+                    ))}
+                    <td className="px-4 py-3 font-semibold text-center tabular-nums">{inventoryTotalAll.toString().padStart(2, '0')}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section>
+            <h2 className="mb-6 text-xl font-semibold text-white">Sales</h2>
+            <div className="overflow-x-auto rounded-3xl border border-slate-800 bg-slate-950/90">
+              <table className="min-w-full border-separate border-spacing-0 text-sm">
+                <thead>
+                  <tr className="text-left text-slate-400">
+                    <th rowSpan={2} className="border-b border-slate-800 px-4 py-3 align-bottom">Tgl</th>
+                    {variantNames.map((variant) => (
+                      <th key={`header-${variant}`} colSpan={2} className="border-b border-slate-800 px-4 py-3 text-center">
+                        {displayVariantName(variant)}
+                      </th>
+                    ))}
+                    <th rowSpan={2} className="border-b border-slate-800 px-4 py-3 align-bottom">Sub-Total</th>
+                  </tr>
+                  <tr className="text-left text-slate-400">
+                    {variantNames.map((variant) => (
+                      <>
+                        <th key={`offline-${variant}`} className="border-b border-slate-800 px-4 py-3 text-center">Offline</th>
+                        <th key={`online-${variant}`} className="border-b border-slate-800 px-4 py-3 text-center">Online</th>
+                      </>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {salesRows.map((row) => (
+                    <tr key={row.date} className="border-b border-slate-800 hover:bg-slate-900/60">
+                      <td className="px-4 py-3 text-slate-200">{row.date}</td>
+                      {row.values.map((value, index) => (
+                        <td key={`${row.date}-${index}`} className="px-4 py-3 text-slate-200 text-center tabular-nums">
+                          {value.toString().padStart(2, '0')}
+                        </td>
+                      ))}
+                      <td className="px-4 py-3 text-slate-100 font-semibold text-center tabular-nums">{row.subtotal.toString().padStart(2, '0')}</td>
+                    </tr>
+                  ))}
+                  <tr className="bg-slate-900/70 text-slate-200">
+                    <td className="px-4 py-3 font-semibold">Jumlah Total</td>
+                    {salesTotals.map((value, index) => (
+                      <td key={`sales-total-${index}`} className="px-4 py-3 text-center tabular-nums">{value.toString().padStart(2, '0')}</td>
+                    ))}
+                    <td className="px-4 py-3 font-semibold text-center tabular-nums">{salesTotalAll.toString().padStart(2, '0')}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section>
+            <h2 className="mb-6 text-xl font-semibold text-white">Remaining Stock (End of Month)</h2>
+            <div className="overflow-x-auto rounded-3xl border border-slate-800 bg-slate-950/90">
+              <table className="min-w-full border-separate border-spacing-0 text-sm">
+                <thead>
+                  <tr className="text-left text-slate-400">
+                    <th className="border-b border-slate-800 px-4 py-3">Tgl</th>
+                    {variantNames.map((variant) => (
+                      <th key={`rem-${variant}`} className="border-b border-slate-800 px-4 py-3">{displayVariantName(variant)}</th>
+                    ))}
+                    <th className="border-b border-slate-800 px-4 py-3">Sub-Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b border-slate-800 hover:bg-slate-900/60">
+                    <td className="px-4 py-3 text-slate-200">{data.today}</td>
+                    {remainingValues.map((value, index) => (
+                      <td key={`rem-${index}`} className="px-4 py-3 text-slate-200 text-center tabular-nums">{value.toString().padStart(2, '0')}</td>
+                    ))}
+                    <td className="px-4 py-3 text-slate-100 font-semibold text-center tabular-nums">{remainingTotal.toString().padStart(2, '0')}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
         </div>
-      )}
-
-      <nav className="flex flex-wrap gap-3">
-        <Link
-          href="/barang-masuk"
-          className="bg-amber-700 text-white px-4 py-2 rounded-lg font-semibold hover:bg-amber-800 text-sm"
-        >
-          + Barang Masuk
-        </Link>
-        <Link
-          href="/penjualan/online"
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 text-sm"
-        >
-          + Penjualan Online
-        </Link>
-        <Link
-          href="/penjualan/offline"
-          className="bg-emerald-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-emerald-700 text-sm"
-        >
-          + Penjualan Offline
-        </Link>
-      </nav>
-
-      <ReportTable
-        title="Stok — Total Entry"
-        subtitle="Total barang masuk (semua waktu)"
-        headers={['Varian', 'Total Entry (Pcs)']}
-        rows={stockRows}
-      />
-
-      <ReportTable
-        title="Penjualan Online"
-        subtitle={`Laporan harian — ${data.monthLabel}`}
-        headers={['Tanggal', 'Varian', 'Jumlah']}
-        rows={onlineDailySalesRows.map((row) => row)}
-      />
-
-      <ReportTable
-        title="Penjualan Offline"
-        subtitle={`Laporan harian — ${data.monthLabel}`}
-        headers={['Tanggal', 'Varian', 'Jumlah']}
-        rows={offlineDailySalesRows.map((row) => row)}
-      />
-
-      <ReportTable
-        title="Sisa Stok"
-        subtitle="Total barang masuk dikurangi total penjualan (online + offline)"
-        headers={['Varian', 'Sisa Stok (Pcs)']}
-        rows={remainingRows}
-      />
+      </div>
     </main>
   )
 }

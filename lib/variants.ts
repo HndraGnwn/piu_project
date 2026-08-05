@@ -8,8 +8,7 @@ export const VARIANT_ORDER = [
 ] as const
 
 export function displayVariantName(dbName: string): string {
-  if (dbName === 'Lotus Biscoff') return 'Dubai Lotus'
-  return `Dubai ${dbName}`
+  return dbName.replace(/^Dubai\s+/, '')
 }
 
 export function sortVariants<T extends { name: string }>(variants: T[]): T[] {

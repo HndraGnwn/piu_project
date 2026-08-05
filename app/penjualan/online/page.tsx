@@ -1,5 +1,5 @@
-import { SalesForm } from '@/components/SalesForm'
+import { MultiSalesForm } from '@/components/MultiSalesForm'
 
 export default function PenjualanOnlinePage() {
-  return <SalesForm channel="online" title="Input Penjualan Online" />
+  return <MultiSalesForm channel="online" title="Input Penjualan Online" />
 }

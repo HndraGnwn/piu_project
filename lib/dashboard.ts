@@ -28,6 +28,7 @@ export type DashboardData = {
   supabaseReady: boolean
   onlineDailySales: DailySalesRow[]
   offlineDailySales: DailySalesRow[]
+  inboundDailyEntries: DailySalesRow[]
 }
 
 type InboundRow = { variant_id: string; quantity: number }
@@ -62,7 +63,7 @@ export async function getDashboardData(): Promise<DashboardData> {
 
   const [variantsResult, inboundResult, salesResult] = await Promise.all([
     supabase.from('variants').select('id, name'),
-    supabase.from('inbound_logs').select('variant_id, quantity'),
+    supabase.from('inbound_logs').select('variant_id, quantity, created_at'),
     supabase.from('sales_logs').select('variant_id, quantity, channel, created_at'),
   ])
 
@@ -117,6 +118,7 @@ export async function getDashboardData(): Promise<DashboardData> {
   // Group sales by date and variant for display in daily tables
   const onlineDailySales = new Map<string, Map<string, number>>() // date -> variant_id -> qty
   const offlineDailySales = new Map<string, Map<string, number>>()
+  const inboundDaily = new Map<string, Map<string, number>>()
 
   for (const sale of salesRows) {
     const date = toJakartaDate(sale.created_at)
@@ -128,6 +130,17 @@ export async function getDashboardData(): Promise<DashboardData> {
     if (!dailyMap.has(date)) dailyMap.set(date, new Map())
     const variantMap = dailyMap.get(date)!
     variantMap.set(sale.variant_id, (variantMap.get(sale.variant_id) ?? 0) + sale.quantity)
+  }
+
+  for (const inbound of inboundRows) {
+    // inbound.created_at may be a timestamp string
+    const date = toJakartaDate((inbound as any).created_at ?? '')
+    const isThisMonth = toJakartaMonth(date) === month
+    if (!isThisMonth) continue
+
+    if (!inboundDaily.has(date)) inboundDaily.set(date, new Map())
+    const variantMap = inboundDaily.get(date)!
+    variantMap.set(inbound.variant_id, (variantMap.get(inbound.variant_id) ?? 0) + inbound.quantity)
   }
 
   // Flatten maps into sorted arrays for rendering
@@ -149,6 +162,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     }
     return rows
   }
+  const inboundDailySales = flattenDailySales(inboundDaily)
 
   return {
     variants,
@@ -159,5 +173,6 @@ export async function getDashboardData(): Promise<DashboardData> {
     supabaseReady: true,
     onlineDailySales: flattenDailySales(onlineDailySales),
     offlineDailySales: flattenDailySales(offlineDailySales),
+    inboundDailyEntries: inboundDailySales,
   }
 }
