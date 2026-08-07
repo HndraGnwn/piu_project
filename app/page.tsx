@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { DeliveryTruck01Icon, ShoppingCart01Icon, Store01Icon } from '@hugeicons/core-free-icons'
 import { ExportPdfButton } from '@/components/ExportPdfButton'
+import { SignOutButton } from '@/components/SignOutButton'
 import { getDashboardData } from '@/lib/dashboard'
 import { displayVariantName } from '@/lib/variants'
 
@@ -121,6 +122,7 @@ export default async function Home() {
               </span>
               Offline Sales
             </Link>
+            <SignOutButton />
           </div>
         </div>
 

@@ -1,4 +1,4 @@
-import { isSupabaseConfigured, supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/server'
 import { displayVariantName, sortVariants } from '@/lib/variants'
 import { currentMonthInJakarta, formatMonthLabel, todayInJakarta, toJakartaDate, toJakartaMonth } from '@/lib/dates'
 
@@ -31,7 +31,7 @@ export type DashboardData = {
   inboundDailyEntries: DailySalesRow[]
 }
 
-type InboundRow = { variant_id: string; quantity: number }
+type InboundRow = { variant_id: string; quantity: number; created_at: string }
 type SalesRow = { variant_id: string; quantity: number; channel: string; created_at: string }
 type VariantRow = { id: string; name: string }
 
@@ -47,8 +47,12 @@ export async function getDashboardData(): Promise<DashboardData> {
   const today = todayInJakarta()
   const month = currentMonthInJakarta()
   const monthLabel = formatMonthLabel(month)
+  const isSupabaseConfigured = Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+      (process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+  )
 
-  if (!isSupabaseConfigured || !supabase) {
+  if (!isSupabaseConfigured) {
     return {
       variants: [],
       today,
@@ -58,8 +62,11 @@ export async function getDashboardData(): Promise<DashboardData> {
       supabaseReady: false,
       onlineDailySales: [],
       offlineDailySales: [],
+      inboundDailyEntries: [],
     }
   }
+
+  const supabase = await createClient()
 
   const [variantsResult, inboundResult, salesResult] = await Promise.all([
     supabase.from('variants').select('id, name'),
@@ -133,8 +140,7 @@ export async function getDashboardData(): Promise<DashboardData> {
   }
 
   for (const inbound of inboundRows) {
-    // inbound.created_at may be a timestamp string
-    const date = toJakartaDate((inbound as any).created_at ?? '')
+    const date = toJakartaDate(inbound.created_at)
     const isThisMonth = toJakartaMonth(date) === month
     if (!isThisMonth) continue
 
