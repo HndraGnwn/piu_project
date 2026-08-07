@@ -1,4 +1,5 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 
@@ -18,7 +19,7 @@ export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseKey)
  * importing this module never throws during module evaluation.
  */
 export const supabase: SupabaseClient | null = isSupabaseConfigured
-  ? createClient(supabaseUrl as string, supabaseKey as string)
+  ? createBrowserClient(supabaseUrl as string, supabaseKey as string)
   : null
 
 export const SUPABASE_SETUP_MESSAGE =

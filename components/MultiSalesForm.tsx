@@ -209,6 +209,7 @@ export function MultiSalesForm({ channel, title }: { channel: Channel; title: st
           </button>
         </div>
       </form>
-    </main>
-  )
+    </div>
+  </main>
+)
 }

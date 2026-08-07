@@ -16,6 +16,37 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Access Control
+
+The app is protected by Supabase Auth and a Next.js `proxy.ts` gate. Only signed-in users whose email is listed in `ALLOWED_LOGIN_EMAILS` can open the POS pages.
+
+Required environment variables:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=...
+ALLOWED_LOGIN_EMAILS=owner@example.com,staff@example.com
+```
+
+Production setup:
+
+1. Add the environment variables above in Vercel.
+2. In Supabase Auth, create or invite each selected user.
+3. Run `supabase/schema.sql` in the Supabase SQL Editor.
+4. Add the same selected emails to `public.authorized_users`:
+
+```sql
+INSERT INTO public.authorized_users (email, role)
+VALUES
+  ('owner@example.com', 'admin'),
+  ('staff@example.com', 'staff')
+ON CONFLICT (email) DO UPDATE
+SET role = EXCLUDED.role,
+    is_active = true;
+```
+
+The Row Level Security policies in `supabase/schema.sql` deny anonymous database access and allow only active rows in `public.authorized_users`.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

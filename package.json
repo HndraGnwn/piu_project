@@ -11,7 +11,8 @@
   "dependencies": {
     "@hugeicons/core-free-icons": "4.2.3",
     "@hugeicons/react": "1.1.9",
-    "@supabase/supabase-js": "^2.112.0",
+    "@supabase/ssr": "^0.12.4",
+    "@supabase/supabase-js": "^2.112.2",
     "next": "16.2.12",
     "react": "19.2.4",
     "react-dom": "19.2.4"

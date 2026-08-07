@@ -31,7 +31,7 @@ export type DashboardData = {
   inboundDailyEntries: DailySalesRow[]
 }
 
-type InboundRow = { variant_id: string; quantity: number }
+type InboundRow = { variant_id: string; quantity: number; created_at: string }
 type SalesRow = { variant_id: string; quantity: number; channel: string; created_at: string }
 type VariantRow = { id: string; name: string }
 
@@ -50,15 +50,17 @@ export async function getDashboardData(): Promise<DashboardData> {
 
   if (!isSupabaseConfigured || !supabase) {
     return {
-      variants: [],
-      today,
-      month,
-      monthLabel,
-      salesTableReady: false,
-      supabaseReady: false,
-      onlineDailySales: [],
-      offlineDailySales: [],
-    }
+
+  variants: [],
+  today,
+  month,
+  monthLabel,
+  salesTableReady: false,
+  supabaseReady: false,
+  onlineDailySales: [],
+  offlineDailySales: [],
+  inboundDailyEntries: [],
+}
   }
 
   const [variantsResult, inboundResult, salesResult] = await Promise.all([
@@ -133,8 +135,7 @@ export async function getDashboardData(): Promise<DashboardData> {
   }
 
   for (const inbound of inboundRows) {
-    // inbound.created_at may be a timestamp string
-    const date = toJakartaDate((inbound as any).created_at ?? '')
+    const date = toJakartaDate(inbound.created_at)
     const isThisMonth = toJakartaMonth(date) === month
     if (!isThisMonth) continue
 

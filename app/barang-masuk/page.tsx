@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { DeliveryTruck01Icon, ShoppingCart01Icon, Store01Icon } from '@hugeicons/core-free-icons'
+import { ShoppingCart01Icon, Store01Icon } from '@hugeicons/core-free-icons'
 import { SUPABASE_SETUP_MESSAGE, supabase } from '@/lib/supabase'
 import { displayVariantName, sortVariants } from '@/lib/variants'
 import { formatDateLabel, jakartaDateToTimestamp, todayInJakarta } from '@/lib/dates'
@@ -299,6 +299,7 @@ export default function BarangMasukPage() {
           </button>
         </div>
       </form>
+      </div>
     </main>
   )
 }
