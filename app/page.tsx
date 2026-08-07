@@ -168,7 +168,15 @@ export default async function Home() {
           </section>
 
           <section>
-            <h2 className="mb-6 text-xl font-semibold text-white">Sales</h2>
+            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <h2 className="text-xl font-semibold text-white">Sales</h2>
+              <Link
+                href="/penjualan/manage"
+                className="inline-flex w-fit items-center gap-2 rounded-2xl border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-sky-500 hover:text-sky-300"
+              >
+                Manage Sales
+              </Link>
+            </div>
             <div className="overflow-x-auto rounded-3xl border border-slate-800 bg-slate-950/90">
               <table className="min-w-full border-separate border-spacing-0 text-sm">
                 <thead>

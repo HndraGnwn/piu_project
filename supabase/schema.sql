@@ -63,6 +63,8 @@ DROP POLICY IF EXISTS "Allow anon read sales_logs" ON public.sales_logs;
 DROP POLICY IF EXISTS "Allow anon insert sales_logs" ON public.sales_logs;
 DROP POLICY IF EXISTS "Authorized users can read sales_logs" ON public.sales_logs;
 DROP POLICY IF EXISTS "Authorized users can insert sales_logs" ON public.sales_logs;
+DROP POLICY IF EXISTS "Authorized users can update sales_logs" ON public.sales_logs;
+DROP POLICY IF EXISTS "Authorized users can delete sales_logs" ON public.sales_logs;
 
 CREATE POLICY "Allow anon read sales_logs"
   ON public.sales_logs FOR SELECT TO anon USING (false);
@@ -77,6 +79,15 @@ CREATE POLICY "Authorized users can read sales_logs"
 CREATE POLICY "Authorized users can insert sales_logs"
   ON public.sales_logs FOR INSERT TO authenticated
   WITH CHECK (public.is_authorized_user());
+
+CREATE POLICY "Authorized users can update sales_logs"
+  ON public.sales_logs FOR UPDATE TO authenticated
+  USING (public.is_authorized_user())
+  WITH CHECK (public.is_authorized_user());
+
+CREATE POLICY "Authorized users can delete sales_logs"
+  ON public.sales_logs FOR DELETE TO authenticated
+  USING (public.is_authorized_user());
 
 -- Increase stock when goods arrive
 CREATE OR REPLACE FUNCTION public.handle_inbound()
@@ -109,3 +120,47 @@ DROP TRIGGER IF EXISTS on_sale_insert ON public.sales_logs;
 CREATE TRIGGER on_sale_insert
   AFTER INSERT ON public.sales_logs
   FOR EACH ROW EXECUTE FUNCTION public.handle_sale();
+
+-- Correct stock when a sale is edited
+CREATE OR REPLACE FUNCTION public.handle_sale_update()
+RETURNS trigger AS $$
+BEGIN
+  IF OLD.variant_id = NEW.variant_id THEN
+    UPDATE public.variants
+    SET stock_quantity = stock_quantity + OLD.quantity - NEW.quantity
+    WHERE id = NEW.variant_id;
+  ELSE
+    UPDATE public.variants
+    SET stock_quantity = stock_quantity + OLD.quantity
+    WHERE id = OLD.variant_id;
+
+    UPDATE public.variants
+    SET stock_quantity = stock_quantity - NEW.quantity
+    WHERE id = NEW.variant_id;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+DROP TRIGGER IF EXISTS on_sale_update ON public.sales_logs;
+CREATE TRIGGER on_sale_update
+  AFTER UPDATE ON public.sales_logs
+  FOR EACH ROW EXECUTE FUNCTION public.handle_sale_update();
+
+-- Restore stock when a sale is deleted
+CREATE OR REPLACE FUNCTION public.handle_sale_delete()
+RETURNS trigger AS $$
+BEGIN
+  UPDATE public.variants
+  SET stock_quantity = stock_quantity + OLD.quantity
+  WHERE id = OLD.variant_id;
+
+  RETURN OLD;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+DROP TRIGGER IF EXISTS on_sale_delete ON public.sales_logs;
+CREATE TRIGGER on_sale_delete
+  AFTER DELETE ON public.sales_logs
+  FOR EACH ROW EXECUTE FUNCTION public.handle_sale_delete();
