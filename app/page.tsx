@@ -1,3 +1,4 @@
+import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { HugeiconsIcon } from '@hugeicons/react'
@@ -94,7 +95,7 @@ export default async function Home() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3 no-print">
             <Link
               href="/barang-masuk"
               className="inline-flex items-center gap-2 rounded-2xl bg-orange-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(249,115,22,0.35)] transition hover:bg-orange-400"
@@ -129,9 +130,11 @@ export default async function Home() {
         <div className="mt-10 space-y-10">
           <section>
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-white">Inventory</h2>
-              <ExportPdfButton />
-            </div>
+                <h2 className="text-xl font-semibold text-white">Inventory</h2>
+                <div className="no-print">
+                  <ExportPdfButton />
+                </div>
+              </div>
             <div className="overflow-x-auto rounded-3xl border border-slate-800 bg-slate-950/90">
               <table className="min-w-full border-separate border-spacing-0 text-sm">
                 <thead>
@@ -170,12 +173,14 @@ export default async function Home() {
           <section>
             <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <h2 className="text-xl font-semibold text-white">Sales</h2>
-              <Link
-                href="/penjualan/manage"
-                className="inline-flex w-fit items-center gap-2 rounded-2xl border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-sky-500 hover:text-sky-300"
-              >
-                Manage Sales
-              </Link>
+              <div className="no-print">
+                <Link
+                  href="/penjualan/manage"
+                  className="inline-flex w-fit items-center gap-2 rounded-2xl border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-sky-500 hover:text-sky-300"
+                >
+                  Manage Sales
+                </Link>
+              </div>
             </div>
             <div className="overflow-x-auto rounded-3xl border border-slate-800 bg-slate-950/90">
               <table className="min-w-full border-separate border-spacing-0 text-sm">
@@ -190,12 +195,12 @@ export default async function Home() {
                     <th rowSpan={2} className="border-b border-slate-800 px-4 py-3 align-bottom">Sub-Total</th>
                   </tr>
                   <tr className="text-left text-slate-400">
-                    {variantNames.map((variant) => (
-                      <>
-                        <th key={`offline-${variant}`} className="border-b border-slate-800 px-4 py-3 text-center">Offline</th>
-                        <th key={`online-${variant}`} className="border-b border-slate-800 px-4 py-3 text-center">Online</th>
-                      </>
-                    ))}
+                      {variantNames.map((variant) => (
+                        <React.Fragment key={variant}>
+                          <th key={`offline-${variant}`} className="border-b border-slate-800 px-4 py-3 text-center">Offline</th>
+                          <th key={`online-${variant}`} className="border-b border-slate-800 px-4 py-3 text-center">Online</th>
+                        </React.Fragment>
+                      ))}
                   </tr>
                 </thead>
                 <tbody>

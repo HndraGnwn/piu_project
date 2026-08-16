@@ -24,10 +24,59 @@ body {
 * {
   box-sizing: border-box;
 }
+@media print {
+  button,
+  .no-print {
+    display: none !important;
+  }
 
-button,
-input,
-select,
-textarea {
-  font: inherit;
+  /* Force a white paper background and black text for printing.
+     Also remove element backgrounds so the paper remains white. */
+  html,
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Remove element backgrounds that might otherwise print as dark blocks. */
+  body * {
+    background: transparent !important;
+    color: #000 !important;
+  }
+
+  img {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Keep the PIU logo visible on paper by inverting its light color. */
+  img[src*="piu-logo"] {
+    filter: invert(1) !important;
+    -webkit-filter: invert(1) !important;
+    max-width: 64px !important;
+    height: auto !important;
+    display: inline-block !important;
+  }
+
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    page-break-inside: auto !important;
+  }
+
+  thead {
+    display: table-header-group !important;
+  }
+
+  tfoot {
+    display: table-footer-group !important;
+  }
+
+  tr {
+    page-break-inside: avoid !important;
+    page-break-after: auto !important;
+  }
 }
+
